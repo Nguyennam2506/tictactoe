@@ -1120,14 +1120,18 @@ bool validateInput(std::string& input) {
  *   - Return false so caller can ask again
  */
 bool getInput(int* val) {
+    // Read input from user
     std::string input;
     std::cin >> input;
-    if (validateInput(input))
-    {
-        *val = stoi(input);
-        return true;
+
+    // Validate the input
+    if (!validateInput(input)) {
+        return false;
     }
-    return false;
+
+    // Convert to integer
+    *val = std::stoi(input);
+    return true;
 }
 
 /**
@@ -1151,16 +1155,20 @@ bool getInput(int* val) {
  *   Use getInput() and check range.
  */
 bool selectSize(int* size) {
+    // Get input from user
     int input;
-    if (getInput(&input))
-    {
-        if (3<= input && input <= BOARD_N_MAX)
-        {
-            *size = input;
-            return true;
-        }
+    if (!getInput(&input)) {
+        return false;
     }
-    return false;
+
+    // Check if input is within valid range
+    if (input < 3 || input > BOARD_N_MAX) {
+        return false;
+    }
+
+    // Input is valid, store it
+    *size = input;
+    return true;
 }
 
 /**
@@ -1182,16 +1190,20 @@ bool selectSize(int* size) {
  *   false -> invalid selection
  */
 bool selectGoal(int* goal, const int size) {
+    // Get input from user
     int input;
-    if (getInput(&input))
-    {
-        if (3<= input && input <= size)
-        {
-            *goal = input;
-            return true;
-        }
+    if (!getInput(&input)) {
+        return false;
     }
-    return false;
+
+    // Check if input is within valid range
+    if (input < 3 || input > size) {
+        return false;
+    }
+
+    // Input is valid, store it
+    *goal = input;
+    return true;
 }
 
 /**
@@ -1211,19 +1223,32 @@ bool selectGoal(int* goal, const int size) {
  *   false -> invalid input
  */
 bool selectGameMode(GameMode* mode) {
+    // Get input from user
     int input;
-    if (getInput(&input))
-    {
-        if (1<= input && input <= 3)
-        {
-            if (input == 1) *mode = GameMode::PVP;
-            else if (input == 2) *mode = GameMode::PVE;
-            else if (input == 3) *mode = GameMode::EVE;
-            return true;
-        }
+    if (!getInput(&input)) {
+        return false;
     }
-    *mode = GameMode::INVALID_MODE;
-    return false;
+
+    // Check if input is within valid range
+    if (input < 1 || input > 3) {
+        return false;
+    }
+
+    // Set the corresponding game mode
+    switch (input) {
+        case 1:
+            *mode = GameMode::PVP;
+            break;
+        case 2:
+            *mode = GameMode::PVE;
+            break;
+        case 3:
+            *mode = GameMode::EVE;
+            break;
+    }
+
+    // Input is valid
+    return true;
 }
 
 /**
@@ -1255,19 +1280,32 @@ bool selectGameMode(GameMode* mode) {
  *
  */
 bool selectBotLevel(BotLevel* levels, const int index) {
+    // Get input from user
     int input;
-    if (getInput(&input))
-    {
-        if (1<= input && input <= 3)
-        {
-            if (input == 1) *(levels+index) = BotLevel::EASY;
-            else if (input == 2) *(levels+index) = BotLevel::MEDIUM;
-            else *(levels+index) = BotLevel::HARD;
-            return true;
-        }
+    if (!getInput(&input)) {
+        return false;
     }
-    *(levels+index) = BotLevel::INVALID_LV;
-    return false;
+
+    // Check if input is within valid range
+    if (input < 1 || input > 3) {
+        return false;
+    }
+
+    // Set the corresponding bot level
+    switch (input) {
+        case 1:
+            levels[index] = BotLevel::EASY;
+            break;
+        case 2:
+            levels[index] = BotLevel::MEDIUM;
+            break;
+        case 3:
+            levels[index] = BotLevel::HARD;
+            break;
+    }
+
+    // Input is valid
+    return true;
 }
 
 /**
@@ -1301,17 +1339,23 @@ bool selectBotLevel(BotLevel* levels, const int index) {
  *
  */
 bool getPlayerMove(int* row, int* col) {
+    // Read the entire line from input
     std::string input;
     std::getline(std::cin, input);
+
+    // Parse the input using stringstream
     std::istringstream stream(input);
     int x, y;
     char extra;
-    if (stream >> x >> y && !(stream >> extra))
-    {
+
+    // Check if exactly two integers are provided
+    if (stream >> x >> y && !(stream >> extra)) {
         *row = x;
         *col = y;
         return true;
     }
+
+    // Input format is invalid
     return false;
 }
 
@@ -1398,31 +1442,37 @@ void showSelectMenu(SelectType selectType) {
         case SelectType::SIZE_UI:
             // TODO: display board size selection
             // Example: "Size Input (NxN, 3 <= N <= BOARD_N_MAX)"
+            std::cout << std::format(">----- Select Size (NxN, 3 <= N <= {}) -----<\n\n", BOARD_N_MAX);
             break;
 
         case SelectType::GOAL_UI:
             // TODO: display goal selection
             // Example: "Goal Input (3 - 5, goal <= size)"
+            std::cout << ">----- Select Goal (3 - 5, goal <= size) -----<\n\n";
             break;
 
         case SelectType::GAME_MODE_UI:
             // TODO: display game mode selection
             // Example: "(1) PvP | (2) PvE | (3) EvE"
+            std::cout << ">----- Select Game Mode ( >1< PvP | >2< PvE | >3< EvE) -----<\n\n";
             break;
 
         case SelectType::BOT_LEVEL_UI:
             // TODO: display bot level selection
             // Example: "(1) EASY | (2) MEDIUM | (3) HARD"
+            std::cout << ">----- Select Bot Level ( >1< EASY | >2< MEDIUM | >3< HARD) -----<\n\n";
             break;
 
         case SelectType::PLAYER_UI:
             // TODO: display player move prompt
             // Example input format: "(row, col)"
+            std::cout << ">----- Select Position ( \"row col\" E.g. \"1 2\") -----<\n\n";
             break;
 
         case SelectType::MUL_BOT_LEVEL_UI:
             // TODO: display multiple bot level selection
             // Example input format: "(bot1_level, bot2_level)"
+            std::cout << ">----- Select Multiple Bot Level ( \"bot1_level bot2_level\" E.g. \"1 2\") -----<\n\n";
             break;
 
         default:
@@ -1458,7 +1508,42 @@ void showSelectMenu(SelectType selectType) {
  *     '-' -> empty cell
  */
 void displayBoard(const char board[][BOARD_N_MAX], const int size) {
-    // TODO:
+    // Loop through rows including header and separators
+    for (int i = 0; i < size + 3; i++) {
+        // Loop through columns
+        for (int j = 0; j < size + 1; j++) {
+            // Print column headers
+            if (i == 0) {
+                if (j == 0) {
+                    std::cout << "   0   ";
+                } else if (j == size) {
+                    std::cout << "\n";
+                } else {
+                    std::cout << ((j < 10) ? std::format("{}   ", j) : std::format("{}  ", j));
+                }
+            }
+            // Print horizontal separators
+            else if (i == 1 || i == size + 2) {
+                std::cout << "  " << std::string(size * 4 - 1, '-') << "\n";
+                break;
+            }
+            // Print board rows
+            else {
+                if (j == 0) {
+                    std::cout << ((i - 2 < 10) ? std::format("{} |", i - 2) : std::format("{}|", i - 2));
+                } else if (j == size) {
+                    if (i == size + 1) {
+                        std::cout << board[i - 2][j - 1] << "|\n";
+                    } else {
+                        std::cout << board[i - 2][j - 1] << "|\n\n";
+                    }
+                } else {
+                    std::cout << std::format("{}   ", board[i - 2][j - 1]);
+                }
+            }
+        }
+    }
+    return;
 }
 
 /**
@@ -1475,7 +1560,15 @@ void displayBoard(const char board[][BOARD_N_MAX], const int size) {
  *   Bot (Player 2) is thinking...
  */
 void showPlayer(int player, bool is_bot) {
-    // TODO:
+    // Check if the player is a bot
+    if (is_bot) {
+        std::cout << std::format("Bot (Player {}) is thinking...\n", player);
+        return;
+    }
+
+    // Player is human
+    std::cout << std::format("Player {}'s turn \n", player);
+    return;
 }
 
 /**
@@ -1491,7 +1584,9 @@ void showPlayer(int player, bool is_bot) {
  *   Move placed at (1, 2)
  */
 void showMove(const int row, const int col) {
-    // TODO:
+    // Display the move coordinates
+    std::cout << std::format("Move played at R:{} C:{}\n", row ,col);
+    return;
 }
 
 /**
@@ -1503,9 +1598,10 @@ void showMove(const int row, const int col) {
  *   - The move is outside the board
  */
 void showInvalidMove() {
-    // TODO:
+    // Display invalid move message
+    std::cout << "Invalid Move! (Already selected or Out of range)\n";
+    return;
 }
-
 /**
  * Display the final result of the game.
  *
@@ -1521,8 +1617,19 @@ void showInvalidMove() {
  *   It's a draw!
  */
 void showResult(const int winner, const bool is_bot) {
-    // TODO:
+    // Check if it's a draw
+    if (winner == -1) {
+        std::cout << "It's a draw!" << std::endl;
+    } else {
+        // Determine winner message
+        if (is_bot) {
+            std::cout << "Bot wins!" << std::endl;
+        } else {
+            std::cout << std::format("Player {} wins!", winner) << std::endl;
+        }
+    }
 }
+
 
 /**
  * Print the result in non-interactive mode.
@@ -1537,8 +1644,17 @@ void showResult(const int winner, const bool is_bot) {
  *                result of the game.
  */
 void printResult(const GameResult& gameResult) {
-    // used for non-interactive mode
-    // TODO:
+    // Check if it's a draw
+    if (gameResult.winner == -1) {
+        std::cout << "Draw\n";
+    } else if (gameResult.isBot) {
+        std::cout << "Bot wins\n";
+    } else {
+        std::cout << std::format("Player {} wins\n", gameResult.winner);
+    }
+
+    // Print number of turns
+    std::cout << std::format("Game took {} turn(s)\n", gameResult.turns);
 }
 
 /* ---------- Game Engine ---------- */
