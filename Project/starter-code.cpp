@@ -1913,6 +1913,14 @@ void endGame(const RunConfig& config,
 void initBoard(char board[][BOARD_N_MAX],
                const int size) {
     // TODO: initialize board
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            board[i][j] = '-';
+        }
+    }
+    return;
 }
 
 bool isValidMove(const char board[][BOARD_N_MAX],
@@ -1920,14 +1928,16 @@ bool isValidMove(const char board[][BOARD_N_MAX],
                  const int row,
                  const int col) {
     // TODO: validate move
-    return false;
+    if (row >= size || row < 0 || col >= size || col < 0 || board[row][col] != '-')
+        return false;
+    return true;
 }
 
 void makeMove(char board[][BOARD_N_MAX],
               const int row,
               const int col,
               const char symbol) {
-    // TODO: making move
+    board[row][col] = symbol;
 }
 
 bool isEmptyHead(char board[][BOARD_N_MAX],
@@ -1940,7 +1950,10 @@ bool isEmptyHead(char board[][BOARD_N_MAX],
     // - on board boundary
     // - is empty symbol ('-')
     // - equal to current symbol
-
+    if (x == size || x == -1 || y == size || y == -1 || board[y][x] == '-' || board[y][x] == symbol)
+    {
+        return true;
+    }
     return false;
 }
 
