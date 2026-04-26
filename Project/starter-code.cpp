@@ -2154,14 +2154,11 @@ pII simple_heuristic(char board[][BOARD_N_MAX],
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             if (board[i][j] == '-') {
-                // Simulate placing bot symbol
                 board[i][j] = botSymbol;
                 if (checkWin(board, size, botSymbol, goal)) {
-                    // Undo move
                     board[i][j] = '-';
                     return std::make_pair(i, j);
                 }
-                // Undo move
                 board[i][j] = '-';
             }
         }
@@ -2171,14 +2168,11 @@ pII simple_heuristic(char board[][BOARD_N_MAX],
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
             if (board[i][j] == '-') {
-                // Simulate placing opponent symbol
                 board[i][j] = playerSymbol;
                 if (checkWin(board, size, playerSymbol, goal)) {
-                    // Undo move
                     board[i][j] = '-';
                     return std::make_pair(i, j);
                 }
-                // Undo move
                 board[i][j] = '-';
             }
         }
