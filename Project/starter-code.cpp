@@ -173,6 +173,7 @@
 #include <thread>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 /* ------------------------------------------------------------ */
 /* -------------------- [GLOBAL VARIABLES] -------------------- */
@@ -2010,10 +2011,15 @@ bool checkWin(char board[][BOARD_N_MAX],
  *   true  -> draw
  *   false -> game can continue
  */
-bool checkDraw(char board[][BOARD_N_MAX],
-               const int size) {
-    // TODO: detect if the board has no empty cells
-    return false;
+bool checkDraw(char board[][BOARD_N_MAX],const int size){
+    for (int i = 0; i < size; i++) {
+        for (int j=0; j<size; j++) 
+        {
+            if (board[i][j]=='-') 
+                return false;
+        }
+    }
+    return true; 
 }
 
 /* ---------- Bot Move Logic ---------- */
@@ -2097,10 +2103,27 @@ pII botMove(char board[][BOARD_N_MAX],
 
 pII random_pick(char board[][BOARD_N_MAX],
                 const int size) {
-    // TODO: student implementation
-
-    // placeholder
-    return std::make_pair(-1, -1);
+    // Collect all empty cells
+    std::vector<pII> empty_cells;
+    
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (board[i][j] == '-') {
+                empty_cells.push_back(std::make_pair(i, j));
+            }
+        }
+    }
+    
+    // If no empty cells available, return invalid
+    if (empty_cells.empty()) {
+        return std::make_pair(-1, -1);
+    }
+    
+    // Pick a random index from the empty cells vector
+    std::uniform_int_distribution<int> distribution(0, empty_cells.size() - 1);
+    int random_index = distribution(generator);
+    
+    return empty_cells[random_index];
 }
 
 // Level 2
@@ -2127,9 +2150,69 @@ pII simple_heuristic(char board[][BOARD_N_MAX],
                      const int goal,
                      const char botSymbol,
                      const char playerSymbol) {
-    // TODO: student implementation
-
-    // fallback
+    // Strategy 1: Try to win if possible
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (board[i][j] == '-') {
+                // Simulate placing bot symbol
+                board[i][j] = botSymbol;
+                if (checkWin(board, size, botSymbol, goal)) {
+                    // Undo move
+                    board[i][j] = '-';
+                    return std::make_pair(i, j);
+                }
+                // Undo move
+                board[i][j] = '-';
+            }
+        }
+    }
+    
+    // Strategy 2: Block opponent winning move
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (board[i][j] == '-') {
+                // Simulate placing opponent symbol
+                board[i][j] = playerSymbol;
+                if (checkWin(board, size, playerSymbol, goal)) {
+                    // Undo move
+                    board[i][j] = '-';
+                    return std::make_pair(i, j);
+                }
+                // Undo move
+                board[i][j] = '-';
+            }
+        }
+    }
+    
+    // Strategy 3: Prefer center or cells near existing pieces
+    int centerRow = size / 2;
+    int centerCol = size / 2;
+    
+    // Check center first
+    if (board[centerRow][centerCol] == '-') {
+        return std::make_pair(centerRow, centerCol);
+    }
+    
+    // Find cells near existing pieces
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if (board[i][j] == '-') {
+                // Check if near any piece (distance <= 1)
+                for (int di = -1; di <= 1; di++) {
+                    for (int dj = -1; dj <= 1; dj++) {
+                        int ni = i + di;
+                        int nj = j + dj;
+                        if (ni >= 0 && ni < size && nj >= 0 && nj < size && 
+                            (board[ni][nj] == botSymbol || board[ni][nj] == playerSymbol)) {
+                            return std::make_pair(i, j);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Fallback: random pick
     return random_pick(board, size);
 }
 
