@@ -1832,23 +1832,27 @@ GameResult playGame(const RunConfig& config,
 void endGame(const RunConfig& config,
              GameSetup& gameSetup,
              GameResult& gameResult) {
-    // TODO:
-    // 1. If interactive mode
-    //      clear screen
-    //      display final board
-    //      show result
-
-    // Example:
-    // clearScreen();
-    // displayBoard(gameSetup.board, gameSetup.size);
-    // showResult(gameResult.winner, gameResult.isBot);
-
-    // 2. If judge mode
-    //      print minimal result
-    // Example:
-    // printResult(gameResult);
-
-    // 3. (optional) log result using GameLogger
+    // Interactive mode: show full UI
+    if (config.interactive) {
+        clearScreen();
+        displayBoard(gameSetup.board, gameSetup.size);
+        showResult(gameResult.winner, gameResult.isBot);
+    }
+    
+    // Judge mode: print minimal result only
+    if (config.judge_mode) {
+        printResult(gameResult);
+    }
+    
+    // Log final result
+    if (gameResult.winner == DRAW_RESULT) {
+        GameLogger::log("Game ended in a DRAW");
+    } else if (gameResult.isBot) {
+        GameLogger::log(std::format("Bot wins! (Player {} wins)", gameResult.winner + 1));
+    } else {
+        GameLogger::log(std::format("Player {} wins!", gameResult.winner + 1));
+    }
+    GameLogger::log(std::format("Total turns: {}", gameResult.turns));
 }
 
 /* ---------- Game Logic ---------- */
