@@ -1,0 +1,106 @@
+main()
+ │
+ ├── parseArgs()                      <-- Đọc tham số dòng lệnh (--judge, --input...)
+ ├── GameLogger::init()               <-- Khởi tạo hệ thống ghi log
+ ├── initInteraction()                <-- Thiết lập luồng nhập dữ liệu (từ file hoặc bàn phím)
+ │
+ ├── 1. startGame()                   <-- [GIAI ĐOẠN 1: THIẾT LẬP GAME]
+ │   │
+ │   ├── clearScreen()                <-- Xóa màn hình
+ │   ├── showSelectMenu()             <-- Hiển thị tiêu đề & câu hỏi chọn Size
+ │   ├── selectSize()                 
+ │   │   └── getInput()               
+ │   │       └── validateInput()      <-- Xác thực đầu vào chỉ chứa số
+ │   │
+ │   ├── showSelectMenu()             <-- Hiển thị câu hỏi chọn Goal
+ │   ├── selectGoal()
+ │   │   └── getInput() -> validateInput()
+ │   │
+ │   ├── showSelectMenu()             <-- Hiển thị câu hỏi chọn Game Mode
+ │   ├── selectGameMode()
+ │   │   └── getInput() -> validateInput()
+ │   │
+ │   ├── showSelectMenu()             <-- Hiển thị câu hỏi chọn Bot Level (nếu có Bot)
+ │   ├── selectBotLevel()
+ │   │   └── getInput() -> validateInput()
+ │   │
+ │   └── initBoard()                  <-- Gán tất cả ô trên bàn cờ bằng '-'
+ │
+ ├── 2. playGame()                    <-- [GIAI ĐOẠN 2: VÒNG LẶP TRÒ CHƠI CHÍNH]
+ │   │
+ │   └── Vòng lặp while(true):
+ │       ├── displayBoard()           <-- In bàn cờ hiện tại ra màn hình
+ │       ├── showPlayer()             <-- In ra thông báo tới lượt ai
+ │       │
+ │       ├── Rẽ nhánh theo lượt chơi:
+ │       │   ├── (Lượt Người):
+ │       │   │   ├── showSelectMenu() <-- Yêu cầu nhập tọa độ
+ │       │   │   └── getPlayerMove()  <-- Lấy chuỗi tọa độ (row, col)
+ │       │   │
+ │       │   └── (Lượt Bot):
+ │       │       └── measureExecutionTime() <-- Đo thời gian Bot suy nghĩ
+ │       │           └── botMove()
+ │       │               ├── random_pick()      (Easy)
+ │       │               ├── simple_heuristic() (Medium) -> gọi checkWin() để đánh giá
+ │       │               └── hard_level()       (Hard)
+ │       │
+ │       ├── isValidMove()            <-- Kiểm tra tọa độ có nằm trong bàn cờ & ô có trống không?
+ │       │   └── (Nếu sai) -> showInvalidMove() -> Lặp lại vòng này
+ │       │
+ │       ├── makeMove()               <-- Ghi đè chữ 'X' hoặc 'O' vào tọa độ
+ │       ├── showMove()               <-- Thông báo nước đi vừa đánh
+ │       │
+ │       ├── checkWin()               <-- Quét ngang, dọc, chéo xem có ai đủ 'goal' chưa
+ │       │   └── isEmptyHead()        <-- Kiểm tra đầu chặn (nếu dùng luật mở rộng)
+ │       │
+ │       └── checkDraw()              <-- Quét xem bàn cờ đã kín chưa (hòa)
+ │           └── (Nếu Win hoặc Draw) -> Phá vỡ vòng lặp, trả về GameResult
+ │
+ ├── 3. endGame()                     <-- [GIAI ĐOẠN 3: KẾT THÚC & IN KẾT QUẢ]
+ │   │
+ │   ├── clearScreen()
+ │   ├── displayBoard()               <-- In bàn cờ lần cuối cùng
+ │   ├── showResult()                 <-- (Chế độ UI) In chữ "Player 1 wins!" hoặc "Draw!"
+ │   └── printResult()                <-- (Chế độ Judge) In kết quả tóm tắt cho máy chấm
+ │
+ ├── closeInteraction()               <-- Trả lại luồng cin về mặc định, đóng file input
+ └── GameLogger::close()              <-- Đóng file log.txt
+
+
+
+
+
+* Students must implement the following core functions:
+ *
+ *   Game Interaction
+ *       validateInput()
+ *       getInput()
+ *       selectSize()
+ *       selectGoal()
+ *       selectGameMode()
+ *       selectBotLevel()
+ *       getPlayerMove()
+ *
+ *   Game Renderer
+ *       displayBoard()
+ *       showMove()
+ *       showInvalidMove()
+ *       showPlayer()
+ *       showResult()
+ *       printResult()
+ *
+ *   Game Logic
+ *       initBoard()
+ *       isValidMove()
+ *       makeMove()
+ *       isEmptyHead()
+ *       checkWin()
+ *       checkDraw()
+ *
+ *   Bot Logic
+ *       random_pick()   (EASY bot - REQUIRED)
+ *
+ *   Game Engine
+ *       startGame()
+ *       playGame()
+ *       endGame()

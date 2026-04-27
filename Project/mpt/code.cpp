@@ -712,7 +712,7 @@ void initBoard(char board[][BOARD_N_MAX], const int size);
 bool isValidMove(const char board[][BOARD_N_MAX], const int size, const int row, const int col);
 void makeMove(char board[][BOARD_N_MAX], const int row, const int col, const char symbol);
 bool isEmptyHead(char board[][BOARD_N_MAX], int size, int x, int y, const char symbol);
-bool checkWin(char board[][BOARD_N_MAX], const int size, const char symbol, const int goal, EndRule rule = EndRule::OPEN_TWO);
+bool checkWin(char board[][BOARD_N_MAX], const int size, const int row, const int col, const char symbol, const int goal, EndRule rule = EndRule::OPEN_TWO);
 bool checkDraw(char board[][BOARD_N_MAX], const int size);
 
 // Bot Move Logic
@@ -1700,18 +1700,35 @@ void startGame(const RunConfig& config,
     // 2. Show game title
     // showSelectMenu(SelectType::TITLE_UI);
 
+    if (config.interactive) {
+        clearScreen();
+        showSelectMenu(SelectType::TITLE_UI);
+    }
+
     // 3. Ask user for board size
     // repeat until valid:
     // showSelectMenu(SelectType::SIZE_UI);
     // selectSize(&gameSetup.size);
 
+    do {
+        if (config.interactive) showSelectMenu(SelectType::SIZE_UI);
+    } while (!selectSize(&gameSetup.size));
+
     // 4. Ask user for win condition (goal)
     // showSelectMenu(SelectType::GOAL_UI);
     // selectGoal(&gameSetup.goal, gameSetup.size);
 
+    do {
+        if (config.interactive) showSelectMenu(SelectType::GOAL_UI);
+    } while (!selectGoal(&gameSetup.goal, gameSetup.size));
+
     // 5. Ask for game mode
     // showSelectMenu(SelectType::GAME_MODE_UI);
     // selectGameMode(&gameSetup.mode);
+
+    do {
+        if (config.interactive) showSelectMenu(SelectType::GAME_MODE_UI);
+    } while (!selectGameMode(&gameSetup.mode));
 
     // 6. If mode == PVE
     // ask bot difficulty for player 2
@@ -1719,8 +1736,21 @@ void startGame(const RunConfig& config,
     // 7. If mode == EVE
     // ask bot difficulty for both bots
 
+    if (gameSetup.mode == GameMode::PVE) {
+        do {
+            if (config.interactive) showSelectMenu(SelectType::BOT_LEVEL_UI);
+        } while (!selectBotLevel(gameSetup.levels, 1));
+        
+    } else if (gameSetup.mode == GameMode::EVE) {
+        do {
+            if (config.interactive) showSelectMenu(SelectType::MUL_BOT_LEVEL_UI);
+        } while (!selectBotLevel(gameSetup.levels, 0) || !selectBotLevel(gameSetup.levels, 1));
+    }
+
     // 8. Initialize board
     // initBoard(gameSetup.board, gameSetup.size);
+
+    initBoard(gameSetup.board, gameSetup.size);
 }
 
 /**
@@ -1826,8 +1856,106 @@ GameResult playGame(const RunConfig& config,
     // result.turns
     // result.isBot
 
+    // 1. Initialize variables
+    int currentPlayer = 0;              // current player index (0 for Player 1, 1 for Player 2)
+    char symbols[2] = {'X', 'O'};       // symbol mapping ('X', 'O')
+    int turns = 0;                      // turn counter
+
+    // 2. Main game loop
+    while (true) {
+        // a) display board
+        if (config.interactive) {
+            displayBoard(gameSetup.board, gameSetup.size);
+        }
+
+        // b) determine if player is human or bot
+        bool isBot = false;
+        if (gameSetup.mode == GameMode::EVE) {
+            isBot = true;
+        } else if (gameSetup.mode == GameMode::PVE && currentPlayer == 1) {
+            isBot = true;
+        }
+
+        if (config.interactive) {
+            showPlayer(currentPlayer + 1, isBot);
+        }
+
+        int row, col;
+        bool valid = false;
+
+        // Loop until a valid move is provided
+        do {
+            if (!isBot) {
+                // c.1) get move for human player
+                if (config.interactive) showSelectMenu(SelectType::PLAYER_UI);
+                
+                if (getPlayerMove(&row, &col)) {
+                    valid = isValidMove(gameSetup.board, gameSetup.size, row, col);
+                } else {
+                    valid = false;
+                }
+
+                if (!valid && config.interactive) {
+                    showInvalidMove();
+                }
+            } else {
+                // c.2) get move for bot and log runtime
+                pII point = measureExecutionTime(
+                    "botMove",
+                    [&]() {
+                        return botMove(gameSetup.board,
+                                       gameSetup.size,
+                                       gameSetup.goal,
+                                       symbols[currentPlayer],
+                                       gameSetup.levels[currentPlayer]);
+                    },
+                    TIME_ENABLED);
+                
+                row = point.first;
+                col = point.second;
+
+                // d) validate bot move
+                valid = isValidMove(gameSetup.board, gameSetup.size, row, col);
+
+                if (config.interactive) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+                }
+            }
+        } while (!valid);
+
+        // e) apply move
+        makeMove(gameSetup.board, row, col, symbols[currentPlayer]);
+        
+        if (config.interactive) {
+            showMove(row, col);
+        }
+        
+        turns++;
+
+        // f) check win
+        if (checkWin(gameSetup.board, gameSetup.size, row, col, symbols[currentPlayer], gameSetup.goal)) {
+            result.winner = currentPlayer + 1;
+            result.isBot = isBot;
+            result.turns = turns;
+            break;
+        }
+
+        // g) check draw
+        if (checkDraw(gameSetup.board, gameSetup.size)) {
+            result.winner = DRAW_RESULT;
+            result.isBot = false;
+            result.turns = turns;
+            break;
+        }
+
+        // h) switch player
+        currentPlayer = 1 - currentPlayer; 
+    }
+
+    // 3. Return GameResult
     return result;
 }
+
 
 void endGame(const RunConfig& config,
              GameSetup& gameSetup,
@@ -1849,6 +1977,30 @@ void endGame(const RunConfig& config,
     // printResult(gameResult);
 
     // 3. (optional) log result using GameLogger
+
+
+    // 1. If interactive mode: show final UI
+    if (config.interactive) {
+        clearScreen();
+        displayBoard(gameSetup.board, gameSetup.size);
+        showResult(gameResult.winner, gameResult.isBot);
+    }
+
+    // 2. If judge mode: print standard minimal output for automated grading
+    if (config.judge_mode) {
+        printResult(gameResult);
+    }
+
+    // 3. Log the final result using GameLogger
+    std::string log_msg;
+    if (gameResult.winner == DRAW_RESULT) {
+        log_msg = "Game ended in a draw after " + std::to_string(gameResult.turns) + " turns.";
+    } else {
+        std::string playerType = gameResult.isBot ? "Bot" : "Human";
+        log_msg = "Game ended. Player " + std::to_string(gameResult.winner) + 
+                  " (" + playerType + ") won after " + std::to_string(gameResult.turns) + " turns.";
+    }
+    GameLogger::log(log_msg, GameLogger::Level::INFO);
 }
 
 /* ---------- Game Logic ---------- */
@@ -1951,8 +2103,10 @@ bool isEmptyHead(char board[][BOARD_N_MAX],
     // - on board boundary
     // - is empty symbol ('-')
     // - equal to current symbol
-    if (x == size || x == -1 || y == size || y == -1 || board[y][x] == '-' || board[y][x] == symbol)
-    {
+    if (x >= size || x < 0 || y >= size || y < 0) {
+        return false;
+    }
+    if (board[y][x] == '-') {
         return true;
     }
     return false;
@@ -1987,11 +2141,69 @@ bool isEmptyHead(char board[][BOARD_N_MAX],
  */
 bool checkWin(char board[][BOARD_N_MAX],
               const int size,
+              const int row,        // NEW PARAMETER: row of the last move
+              const int col,        // NEW PARAMETER: col of the last move
               const char symbol,
               const int goal,
               EndRule rule) {
     // TODO: student implementation
 
+    // Define the 4 axes (each axis has 2 opposite directions)
+    // format: { {dx1, dy1}, {dx2, dy2} }
+    int axes[4][2][2] = {
+        {{0, -1}, {0, 1}},   // Horizontal: Left, Right
+        {{-1, 0}, {1, 0}},   // Vertical: Up, Down
+        {{-1, -1}, {1, 1}},  // Main Diagonal: Top-Left, Bottom-Right
+        {{-1, 1}, {1, -1}}   // Anti-Diagonal: Top-Right, Bottom-Left
+    };
+
+    // Check each of the 4 axes
+    for (int i = 0; i < 4; i++) {
+        int count = 1; // The newly placed symbol counts as 1
+        int head_r[2]; // To store the row index of the 2 endpoints
+        int head_c[2]; // To store the col index of the 2 endpoints
+
+        // Expand in both opposite directions for the current axis
+        for (int dir = 0; dir < 2; dir++) {
+            int dx = axes[i][dir][0];
+            int dy = axes[i][dir][1];
+            
+            int r = row + dx;
+            int c = col + dy;
+
+            // Keep moving as long as we find the same symbol within board limits
+            while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == symbol) {
+                count++;
+                r += dx;
+                c += dy;
+            }
+            // Save the endpoint coordinates (where the while loop stopped)
+            head_r[dir] = r;
+            head_c[dir] = c;
+        }
+
+        // If we reached the required goal consecutive symbols
+        if (count >= goal) {
+            
+            if (rule == EndRule::NONE) {
+                return true; // Win immediately, no endpoint rules
+            } 
+            else {
+                // Check if the endpoints are open spaces
+                // Note: isEmptyHead uses x for column (c) and y for row (r)
+                bool empty1 = isEmptyHead(board, size, head_c[0], head_r[0], symbol);
+                bool empty2 = isEmptyHead(board, size, head_c[1], head_r[1], symbol);
+
+                if (rule == EndRule::OPEN_ONE && (empty1 || empty2)) {
+                    return true; // At least one end is open
+                }
+                if (rule == EndRule::OPEN_TWO && (empty1 && empty2)) {
+                    return true; // Both ends must be open
+                }
+            }
+        }
+    }
+    
     return false;
 }
 
@@ -2155,7 +2367,7 @@ pII simple_heuristic(char board[][BOARD_N_MAX],
         for (int j = 0; j < size; j++) {
             if (board[i][j] == '-') {
                 board[i][j] = botSymbol;
-                if (checkWin(board, size, botSymbol, goal)) {
+                if (checkWin(board, size, i, j, botSymbol, goal)) {
                     board[i][j] = '-';
                     return std::make_pair(i, j);
                 }
@@ -2169,7 +2381,7 @@ pII simple_heuristic(char board[][BOARD_N_MAX],
         for (int j = 0; j < size; j++) {
             if (board[i][j] == '-') {
                 board[i][j] = playerSymbol;
-                if (checkWin(board, size, playerSymbol, goal)) {
+                if (checkWin(board, size, i, j, playerSymbol, goal)) {
                     board[i][j] = '-';
                     return std::make_pair(i, j);
                 }
@@ -2335,7 +2547,7 @@ auto measureExecutionTime(const std::string& label, Function func, bool enabled)
  */
 int main(int argc, char* argv[]) {
     RunConfig config = parseArgs(argc, argv);
-    
+
     GameLogger::init(config.judge_mode, true, config.log_file);
     GameLogger::log("GameLogger initialized!");
 
