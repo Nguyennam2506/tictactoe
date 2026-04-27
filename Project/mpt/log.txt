@@ -1,9 +1,0 @@
-Tic-tac-toe Game (Version: 0.4.25022955)
-------------------------------------------------
-[INFO] - [2026-04-27 16:46:18] GameLogger initialized!
-[INFO] - [2026-04-27 16:46:18] GameInteraction initialized!
-[INFO] - [2026-04-27 16:46:36] GameEngine initialized!
-[DEBUG] - [2026-04-27 16:46:51] execution time of [botMove()] = 9.8e-06s
-[DEBUG] - [2026-04-27 16:47:01] execution time of [botMove()] = 3.9e-06s
-[DEBUG] - [2026-04-27 16:47:18] execution time of [botMove()] = 3e-06s
-[DEBUG] - [2026-04-27 16:47:27] execution time of [botMove()] = 2.2e-06s

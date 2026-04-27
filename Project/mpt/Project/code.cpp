@@ -1342,7 +1342,10 @@ bool selectBotLevel(BotLevel* levels, const int index) {
 bool getPlayerMove(int* row, int* col) {
     // Read the entire line from input
     std::string input;
-    std::getline(std::cin, input);
+
+    do {
+        std::getline(std::cin, input);
+    } while (input.empty());
 
     // Parse the input using stringstream
     std::istringstream stream(input);
@@ -1988,7 +1991,14 @@ void endGame(const RunConfig& config,
 
     // 2. If judge mode: print standard minimal output for automated grading
     if (config.judge_mode) {
-        printResult(gameResult);
+        if (gameResult.winner == DRAW_RESULT)
+        {
+            std::cout << gameResult.winner << " " << gameResult.turns << "\n";
+        }
+        else
+        {
+            std::cout << gameResult.winner - 1 << " " << gameResult.turns << "\n";
+        }
     }
 
     // 3. Log the final result using GameLogger
@@ -2104,7 +2114,7 @@ bool isEmptyHead(char board[][BOARD_N_MAX],
     // - is empty symbol ('-')
     // - equal to current symbol
     if (x >= size || x < 0 || y >= size || y < 0) {
-        return false;
+        return true;
     }
     if (board[y][x] == '-') {
         return true;
