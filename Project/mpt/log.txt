@@ -1,0 +1,9 @@
+Tic-tac-toe Game (Version: 0.4.25022955)
+------------------------------------------------
+[INFO] - [2026-04-26 22:30:49] GameLogger initialized!
+[INFO] - [2026-04-26 22:30:49] GameInteraction initialized!
+[INFO] - [2026-04-26 22:30:49] GameEngine initialized!
+[INFO] - [2026-04-26 22:30:49] GameEngine playing done!
+[INFO] - [2026-04-26 22:30:49] GameEngine show endgame done!
+[INFO] - [2026-04-26 22:30:49] GameInteraction closed!
+[INFO] - [2026-04-26 22:30:49] GameLogger closing . . .
