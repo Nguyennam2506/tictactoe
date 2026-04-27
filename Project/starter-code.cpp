@@ -2415,13 +2415,15 @@ pII simple_heuristic(char board[][BOARD_N_MAX],
  */
 
 pII hard_level(char board[][BOARD_N_MAX],
-               const int size,
-               const int goal,
-               const char botSymbol,
-               const char playerSymbol) {
-    // TODO: optional bonus implementation
+                const int size,
+                const int goal,
+                const char botSymbol,
+                const char playerSymbol) {
+    // BONUS: optional hard bot implementation (not required)
+    // Currently disabled - falls back to random move
+    // Students can implement advanced AI strategies here if desired
 
-    // fallback
+    // fallback to random
     return random_pick(board, size);
 }
 
