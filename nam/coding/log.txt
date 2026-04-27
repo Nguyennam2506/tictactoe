@@ -1,4 +1,28 @@
 Tic-tac-toe Game (Version: 0.4.25022955)
 ------------------------------------------------
-[INFO] - [2026-04-27 17:53:36] GameLogger initialized!
-[INFO] - [2026-04-27 17:53:36] GameInteraction initialized!
+[INFO] - [2026-04-27 20:38:11] GameLogger initialized!
+[INFO] - [2026-04-27 20:38:11] redirected cin to: C:\Users\Admin\OneDrive\Documents\GitHub\tictactoe\nam\testcase\input4.txt
+[INFO] - [2026-04-27 20:38:11] GameInteraction initialized!
+[INFO] - [2026-04-27 20:38:11] Game setup complete: 4x4 board, goal=3, mode=0
+[INFO] - [2026-04-27 20:38:11] GameEngine initialized!
+[INFO] - [2026-04-27 20:38:11] Turn 1: Player 1 (symbol 'X') moved to (1, 1)
+[INFO] - [2026-04-27 20:38:11] Turn 2: Player 2 (symbol 'O') moved to (1, 2)
+[INFO] - [2026-04-27 20:38:11] Turn 3: Player 1 (symbol 'X') moved to (3, 1)
+[INFO] - [2026-04-27 20:38:11] Turn 4: Player 2 (symbol 'O') moved to (2, 1)
+[INFO] - [2026-04-27 20:38:11] Turn 5: Player 1 (symbol 'X') moved to (2, 3)
+[INFO] - [2026-04-27 20:38:11] Turn 6: Player 2 (symbol 'O') moved to (3, 3)
+[INFO] - [2026-04-27 20:38:11] Turn 7: Player 1 (symbol 'X') moved to (2, 0)
+[INFO] - [2026-04-27 20:38:11] Turn 8: Player 2 (symbol 'O') moved to (0, 1)
+[INFO] - [2026-04-27 20:38:11] Turn 9: Player 1 (symbol 'X') moved to (1, 3)
+[INFO] - [2026-04-27 20:38:11] Turn 10: Player 2 (symbol 'O') moved to (1, 0)
+[INFO] - [2026-04-27 20:38:11] Turn 11: Player 1 (symbol 'X') moved to (3, 2)
+[INFO] - [2026-04-27 20:38:11] Turn 12: Player 2 (symbol 'O') moved to (0, 2)
+[INFO] - [2026-04-27 20:38:11] Turn 13: Player 1 (symbol 'X') moved to (3, 0)
+[INFO] - [2026-04-27 20:38:11] Player 1 wins!
+[INFO] - [2026-04-27 20:38:11] GameEngine playing done!
+[INFO] - [2026-04-27 20:38:11] Player 1 wins!
+[INFO] - [2026-04-27 20:38:11] Total turns: 13
+[INFO] - [2026-04-27 20:38:11] GameEngine show endgame done!
+[INFO] - [2026-04-27 20:38:11] fallback using 'std::cin' input stream.
+[INFO] - [2026-04-27 20:38:11] GameInteraction closed!
+[INFO] - [2026-04-27 20:38:11] GameLogger closing . . .
