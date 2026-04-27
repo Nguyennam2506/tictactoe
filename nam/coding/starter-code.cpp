@@ -1645,9 +1645,17 @@ void showResult(const int winner, const bool is_bot) {
  *                result of the game.
  */
 void printResult(const GameResult& gameResult) {
-    // Output format: winner turns
-    // winner: -1 for draw, 0 for player 1, 1 for player 2
-    std::cout << std::format("{} {}\n", gameResult.winner, gameResult.turns);
+    // Check if it's a draw
+    if (gameResult.winner == -1) {
+        std::cout << "Draw\n";
+    } else if (gameResult.isBot) {
+        std::cout << "Bot wins\n";
+    } else {
+        std::cout << std::format("Player {} wins\n", gameResult.winner);
+    }
+
+    // Print number of turns
+    std::cout << std::format("Game took {} turn(s)\n", gameResult.turns);
 }
 
 /* ---------- Game Engine ---------- */
@@ -1696,72 +1704,58 @@ void startGame(const RunConfig& config,
     }
 
     // 3. Ask user for board size (repeat until valid)
-    while (true) {
-        if (config.interactive) {
+    if (config.interactive) {
+        while (true) {
             showSelectMenu(SelectType::SIZE_UI);
-        }
-        if (selectSize(&gameSetup.size)) {
-            break;
-        }
-        if (config.interactive) {
+            if (selectSize(&gameSetup.size)) {
+                break;
+            }
             showInvalidMove();
         }
     }
 
     // 4. Ask user for win condition (goal)
-    while (true) {
-        if (config.interactive) {
+    if (config.interactive) {
+        while (true) {
             showSelectMenu(SelectType::GOAL_UI);
-        }
-        if (selectGoal(&gameSetup.goal, gameSetup.size)) {
-            break;
-        }
-        if (config.interactive) {
+            if (selectGoal(&gameSetup.goal, gameSetup.size)) {
+                break;
+            }
             showInvalidMove();
         }
     }
 
     // 5. Ask for game mode
-    while (true) {
-        if (config.interactive) {
+    if (config.interactive) {
+        while (true) {
             showSelectMenu(SelectType::GAME_MODE_UI);
-        }
-        if (selectGameMode(&gameSetup.mode)) {
-            break;
-        }
-        if (config.interactive) {
+            if (selectGameMode(&gameSetup.mode)) {
+                break;
+            }
             showInvalidMove();
         }
     }
 
     // 6. If mode == PVE, ask bot difficulty for player 2
-    if (gameSetup.mode == GameMode::PVE) {
+    if (config.interactive && gameSetup.mode == GameMode::PVE) {
         gameSetup.levels[0] = BotLevel::EASY;  // Player 1 is always human
         while (true) {
-            if (config.interactive) {
-                showSelectMenu(SelectType::BOT_LEVEL_UI);
-            }
+            showSelectMenu(SelectType::BOT_LEVEL_UI);
             if (selectBotLevel(gameSetup.levels, 1)) {
                 break;
             }
-            if (config.interactive) {
-                showInvalidMove();
-            }
+            showInvalidMove();
         }
     }
 
     // 7. If mode == EVE, ask bot difficulty for both bots
-    if (gameSetup.mode == GameMode::EVE) {
+    if (config.interactive && gameSetup.mode == GameMode::EVE) {
         while (true) {
-            if (config.interactive) {
-                showSelectMenu(SelectType::MUL_BOT_LEVEL_UI);
-            }
+            showSelectMenu(SelectType::MUL_BOT_LEVEL_UI);
             if (selectBotLevel(gameSetup.levels, 0) && selectBotLevel(gameSetup.levels, 1)) {
                 break;
             }
-            if (config.interactive) {
-                showInvalidMove();
-            }
+            showInvalidMove();
         }
     }
 
@@ -1905,7 +1899,7 @@ GameResult playGame(const RunConfig& config,
                                      move.first, move.second));
 
         // f) Check win
-        if (checkWin(gameSetup.board, gameSetup.size, symbols[currentPlayer], gameSetup.goal, EndRule::NONE)) {
+        if (checkWin(gameSetup.board, gameSetup.size, symbols[currentPlayer], gameSetup.goal)) {
             result.winner = currentPlayer;
             result.isBot = playerIsBot;
             result.turns = turns;
