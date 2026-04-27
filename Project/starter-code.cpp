@@ -1693,34 +1693,78 @@ void printResult(const GameResult& gameResult) {
 
 void startGame(const RunConfig& config,
                GameSetup& gameSetup) {
-    // TODO:
     // 1. Clear screen if interactive mode
-    // if (config.interactive) clearScreen();
+    if (config.interactive) {
+        clearScreen();
+    }
 
     // 2. Show game title
-    // showSelectMenu(SelectType::TITLE_UI);
+    if (config.interactive) {
+        showSelectMenu(SelectType::TITLE_UI);
+    }
 
-    // 3. Ask user for board size
-    // repeat until valid:
-    // showSelectMenu(SelectType::SIZE_UI);
-    // selectSize(&gameSetup.size);
+    // 3. Ask user for board size (repeat until valid)
+    if (config.interactive) {
+        while (true) {
+            showSelectMenu(SelectType::SIZE_UI);
+            if (selectSize(&gameSetup.size)) {
+                break;
+            }
+            showInvalidMove();
+        }
+    }
 
     // 4. Ask user for win condition (goal)
-    // showSelectMenu(SelectType::GOAL_UI);
-    // selectGoal(&gameSetup.goal, gameSetup.size);
+    if (config.interactive) {
+        while (true) {
+            showSelectMenu(SelectType::GOAL_UI);
+            if (selectGoal(&gameSetup.goal, gameSetup.size)) {
+                break;
+            }
+            showInvalidMove();
+        }
+    }
 
     // 5. Ask for game mode
-    // showSelectMenu(SelectType::GAME_MODE_UI);
-    // selectGameMode(&gameSetup.mode);
+    if (config.interactive) {
+        while (true) {
+            showSelectMenu(SelectType::GAME_MODE_UI);
+            if (selectGameMode(&gameSetup.mode)) {
+                break;
+            }
+            showInvalidMove();
+        }
+    }
 
-    // 6. If mode == PVE
-    // ask bot difficulty for player 2
+    // 6. If mode == PVE, ask bot difficulty for player 2
+    if (config.interactive && gameSetup.mode == GameMode::PVE) {
+        gameSetup.levels[0] = BotLevel::EASY;  // Player 1 is always human
+        while (true) {
+            showSelectMenu(SelectType::BOT_LEVEL_UI);
+            if (selectBotLevel(gameSetup.levels, 1)) {
+                break;
+            }
+            showInvalidMove();
+        }
+    }
 
-    // 7. If mode == EVE
-    // ask bot difficulty for both bots
+    // 7. If mode == EVE, ask bot difficulty for both bots
+    if (config.interactive && gameSetup.mode == GameMode::EVE) {
+        while (true) {
+            showSelectMenu(SelectType::MUL_BOT_LEVEL_UI);
+            if (selectBotLevel(gameSetup.levels, 0) && selectBotLevel(gameSetup.levels, 1)) {
+                break;
+            }
+            showInvalidMove();
+        }
+    }
 
     // 8. Initialize board
-    // initBoard(gameSetup.board, gameSetup.size);
+    initBoard(gameSetup.board, gameSetup.size);
+    
+    GameLogger::log(std::format("Game setup complete: {}x{} board, goal={}, mode={}", 
+                                gameSetup.size, gameSetup.size, gameSetup.goal, 
+                                static_cast<int>(gameSetup.mode)));
 }
 
 /**
@@ -1768,63 +1812,113 @@ void startGame(const RunConfig& config,
 GameResult playGame(const RunConfig& config,
                     GameSetup& gameSetup) {
     GameResult result;
+    result.turns = 0;
 
-    // TODO:
     // 1. Initialize variables
-    //    - current player index
-    //    - symbol mapping ('X', 'O')
-    //    - turn counter
+    int currentPlayer = 0;  // 0 for player 1, 1 for player 2
+    char symbols[2] = {'X', 'O'};
+    int turns = 0;
 
-    // Example idea:
-    // int currentPlayer = 0;
-    // char symbols[2] = {'X','O'};
-    // int turns = 0;
+    // Determine which players are bots
+    bool isBot[2] = {false, false};
+    if (gameSetup.mode == GameMode::PVE) {
+        isBot[1] = true;  // Player 2 is bot
+    } else if (gameSetup.mode == GameMode::EVE) {
+        isBot[0] = true;  // Player 1 is bot
+        isBot[1] = true;  // Player 2 is bot
+    }
 
     // 2. Main game loop
-    // while(true)
+    while (true) {
+        // a) Display board
+        if (config.interactive) {
+            clearScreen();
+            displayBoard(gameSetup.board, gameSetup.size);
+        }
 
-    //      a) display board
-    //      displayBoard(...)
+        // b) Determine if player is human or bot
+        bool playerIsBot = isBot[currentPlayer];
 
-    //      b) determine if player is human or bot
+        // Show whose turn it is
+        if (config.interactive) {
+            showPlayer(currentPlayer + 1, playerIsBot);
+        }
 
-    //      c) get move
-    //         human -> getPlayerMove()
-    //         bot   -> botMove()
+        pII move = {-1, -1};
 
-    //         log bot runtime -> measureExecutionTime()
+        // c) Get move (human or bot)
+        if (playerIsBot) {
+            // Bot move with timing measurement
+            move = measureExecutionTime(
+                "botMove",
+                [&]() {
+                    return botMove(gameSetup.board,
+                                   gameSetup.size,
+                                   gameSetup.goal,
+                                   symbols[currentPlayer],
+                                   gameSetup.levels[currentPlayer]);
+                },
+                TIME_ENABLED);
 
-    // // Running Bot Move with meansure runtime
-    // pII point = measureExecutionTime(
-    //     "botMove",
-    //     [&]() {
-    //         return botMove(gameSetup.board,
-    //                        gameSetup.size,
-    //                        gameSetup.goal,
-    //                        symbols[player],
-    //                        gameSetup.levels[player]);
-    //     },
-    //     TIME_ENABLED);
+            if (config.interactive) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+            }
+        } else {
+            // Human player move - keep asking until valid
+            while (true) {
+                if (config.interactive) {
+                    showSelectMenu(SelectType::PLAYER_UI);
+                }
+                if (getPlayerMove(&move.first, &move.second)) {
+                    break;
+                }
+                if (config.interactive) {
+                    showInvalidMove();
+                }
+            }
+        }
 
-    //      d) validate move
-    //         isValidMove(...)
+        // d) Validate move
+        if (!isValidMove(gameSetup.board, gameSetup.size, move.first, move.second)) {
+            if (config.interactive) {
+                showInvalidMove();
+            }
+            continue;  // Ask for move again
+        }
 
-    //      e) apply move
-    //         makeMove(...)
+        // e) Apply move
+        makeMove(gameSetup.board, move.first, move.second, symbols[currentPlayer]);
+        turns++;
 
-    //      f) check win
-    //         checkWin(...)
+        if (config.interactive) {
+            showMove(move.first, move.second);
+        }
 
-    //      g) check draw
-    //         checkDraw(...)
+        GameLogger::log(std::format("Turn {}: Player {} (symbol '{}') moved to ({}, {})",
+                                     turns, currentPlayer + 1, symbols[currentPlayer],
+                                     move.first, move.second));
 
-    //      h) switch player
-    //         currentPlayer = 1 - currentPlayer
+        // f) Check win
+        if (checkWin(gameSetup.board, gameSetup.size, symbols[currentPlayer], gameSetup.goal)) {
+            result.winner = currentPlayer;
+            result.isBot = playerIsBot;
+            result.turns = turns;
+            GameLogger::log(std::format("Player {} wins!", currentPlayer + 1));
+            return result;
+        }
 
-    // 3. fill GameResult structure
-    // result.winner
-    // result.turns
-    // result.isBot
+        // g) Check draw
+        if (checkDraw(gameSetup.board, gameSetup.size)) {
+            result.winner = DRAW_RESULT;
+            result.isBot = false;
+            result.turns = turns;
+            GameLogger::log("Game ended in draw!");
+            return result;
+        }
+
+        // h) Switch player
+        currentPlayer = 1 - currentPlayer;
+    }
 
     return result;
 }
@@ -1994,7 +2088,96 @@ bool checkWin(char board[][BOARD_N_MAX],
               const char symbol,
               const int goal,
               EndRule rule) {
-    // TODO: student implementation
+    // Check all four directions: horizontal, vertical, and two diagonals
+    // Direction vectors: dx, dy
+    int directions[4][2] = {
+        {1, 0},   // horizontal (right)
+        {0, 1},   // vertical (down)
+        {1, 1},   // main diagonal (down-right)
+        {1, -1}   // anti-diagonal (down-left)
+    };
+
+    // Check every position as a potential start of a winning sequence
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            // Only check if this cell contains our symbol
+            if (board[i][j] != symbol) {
+                continue;
+            }
+
+            // Check each direction
+            for (int d = 0; d < 4; d++) {
+                int dx = directions[d][0];
+                int dy = directions[d][1];
+
+                int count = 0;
+
+                // Count consecutive symbols in this direction
+                for (int k = 0; k < goal; k++) {
+                    int x = j + k * dx;  // column (horizontal direction)
+                    int y = i + k * dy;  // row (vertical direction)
+
+                    // Check bounds
+                    if (x < 0 || x >= size || y < 0 || y >= size) {
+                        break;
+                    }
+
+                    // Check if it's our symbol
+                    if (board[y][x] != symbol) {
+                        break;
+                    }
+
+                    count++;
+                }
+
+                // If we found 'goal' consecutive symbols
+                if (count == goal) {
+                    // Check endpoint rule if specified
+                    if (rule == EndRule::NONE) {
+                        return true;
+                    } else if (rule == EndRule::OPEN_ONE) {
+                        // At least one end must be open
+                        // Check position before start
+                        int before_x = j - dx;
+                        int before_y = i - dy;
+                        bool open_before = (before_x < 0 || before_x >= size || 
+                                           before_y < 0 || before_y >= size || 
+                                           board[before_y][before_x] != symbol);
+
+                        // Check position after end
+                        int after_x = j + goal * dx;
+                        int after_y = i + goal * dy;
+                        bool open_after = (after_x < 0 || after_x >= size || 
+                                          after_y < 0 || after_y >= size || 
+                                          board[after_y][after_x] != symbol);
+
+                        if (open_before || open_after) {
+                            return true;
+                        }
+                    } else if (rule == EndRule::OPEN_TWO) {
+                        // Both ends must be open
+                        // Check position before start
+                        int before_x = j - dx;
+                        int before_y = i - dy;
+                        bool open_before = (before_x < 0 || before_x >= size || 
+                                           before_y < 0 || before_y >= size || 
+                                           board[before_y][before_x] != symbol);
+
+                        // Check position after end
+                        int after_x = j + goal * dx;
+                        int after_y = i + goal * dy;
+                        bool open_after = (after_x < 0 || after_x >= size || 
+                                          after_y < 0 || after_y >= size || 
+                                          board[after_y][after_x] != symbol);
+
+                        if (open_before && open_after) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return false;
 }
