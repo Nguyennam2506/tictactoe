@@ -1,12 +1,12 @@
 Tic-tac-toe Game (Version: 0.4.25022955)
 ------------------------------------------------
-[INFO] - [2026-04-27 18:38:58] GameLogger initialized!
-[INFO] - [2026-04-27 18:38:58] redirected cin to: D:\Programing\Cpp\tictactoe\Project\mpt\testcase\input5.txt
-[INFO] - [2026-04-27 18:38:58] GameInteraction initialized!
-[INFO] - [2026-04-27 18:38:58] GameEngine initialized!
-[INFO] - [2026-04-27 18:38:58] GameEngine playing done!
-[INFO] - [2026-04-27 18:38:58] Game ended. Player 1 (Human) won after 11 turns.
-[INFO] - [2026-04-27 18:38:58] GameEngine show endgame done!
-[INFO] - [2026-04-27 18:38:58] fallback using 'std::cin' input stream.
-[INFO] - [2026-04-27 18:38:58] GameInteraction closed!
-[INFO] - [2026-04-27 18:38:58] GameLogger closing . . .
+[INFO] - [2026-04-27 19:08:17] GameLogger initialized!
+[INFO] - [2026-04-27 19:08:17] redirected cin to: D:\Programing\Cpp\tictactoe\mpt\testcase\input5.txt
+[INFO] - [2026-04-27 19:08:17] GameInteraction initialized!
+[INFO] - [2026-04-27 19:08:17] GameEngine initialized!
+[INFO] - [2026-04-27 19:08:17] GameEngine playing done!
+[INFO] - [2026-04-27 19:08:17] Game ended. Player 1 (Human) won after 11 turns.
+[INFO] - [2026-04-27 19:08:17] GameEngine show endgame done!
+[INFO] - [2026-04-27 19:08:17] fallback using 'std::cin' input stream.
+[INFO] - [2026-04-27 19:08:17] GameInteraction closed!
+[INFO] - [2026-04-27 19:08:17] GameLogger closing . . .
